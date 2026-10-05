@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: 2026 CERN for the benefit of the SHiP Collaboration
+#
+# SPDX-License-Identifier: LGPL-3.0-or-later
+
+[workspace]
+name = "ship-random"
+description = "Random number helpers shared by the SHiP software"
+channels = ["https://prefix.dev/ship", "conda-forge"]
+platforms = ["linux-64"]
+requires-pixi = ">=0.68"
+
+[dependencies]
+random123 = "*"
+
+# Build toolchain.
+cmake = ">=3.24"
+ninja = "*"
+cxx-compiler = "*"
+
+# Static analysis. clang-tidy lives here rather than in [feature.lint] because
+# it replays the commands in compile_commands.json and so needs the same
+# headers the compiler saw; feature.lint is a separate solve group and could
+# drift from them. clang-tools provides clang-tidy but does not depend on the
+# clang package that ships clang's own builtin headers (stddef.h and friends),
+# and without those every translation unit fails to parse.
+# Both carry the >=19 floor that .clang-tidy's ExcludeHeaderFilterRegex needs,
+# and they have to resolve to the same major: clang-tidy looks for its builtin
+# headers under lib/clang/<major>/include, which is what the clang package
+# supplies. Both come from the same llvm feedstock, so conda keeps them in step.
+clang = ">=19"
+clang-tools = ">=19"
+
+[tasks]
+# CMAKE_CXX_SCAN_FOR_MODULES is off because nothing here is a module and CMake
+# turns scanning on by default at C++20. With it on, compile_commands.json
+# carries GCC-only flags (-fmodules-ts, -fdeps-format, -fmodule-mapper) that
+# clang-tidy rejects outright when it replays the commands.
+configure = { cmd = """
+cmake -S . -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
+    -DCMAKE_CXX_SCAN_FOR_MODULES=OFF
+""" }
+build = { cmd = "cmake --build build -j", depends-on = ["configure"] }
+install = { cmd = "cmake --install build", depends-on = ["build"] }
+test = { cmd = "ctest --test-dir build --output-on-failure", depends-on = ["build"] }
+clean = "rm -rf build"
+
+# Static analysis, mirroring ShipSoft/.github's clang-tidy.yml: `clang-tidy`
+# reports the whole tree. -source-filter is a Python regex (run-clang-tidy is
+# a Python script), unlike the llvm::Regex patterns in .clang-tidy. These use
+# TOML literal strings so the backslashes survive.
+clang-tidy = { cmd = '''
+run-clang-tidy -p build -j $(nproc) -quiet \
+    -source-filter '^(?!.*(/G__|Dict[.]cxx|/_deps/|/CMakeFiles/)).*' \
+    -extra-arg=-isystem$CONDA_PREFIX/include
+''', depends-on = ["build"] }
+
+# Linting / formatting toolchain. prek orchestrates the hooks; the tools come
+# from this environment so versions are tracked in pixi.lock and run identically
+# everywhere (including NixOS). See .pre-commit-config.yaml.
+[feature.lint.dependencies]
+prek = "*"
+python = ">=3.11"
+clang-format = "23.*"
+codespell = "*"
+reuse = "*"
+cffconvert = "*"
+commitizen = "*"
+
+# Pinned via PyPI: conda-forge's gersemi lags the version the other SHiP
+# repos standardised on, and reflows CMake differently.
+[feature.lint.pypi-dependencies]
+gersemi = "==0.29.1"
+
+[feature.lint.tasks]
+lint = "prek run --all-files"
+# Install the git hooks and route them through `pixi run` so the conda-provided
+# hook tools are on PATH at commit time (required on NixOS, where the tools are
+# not runnable without pixi activation).
+install-hooks = '''
+prek install --hook-type pre-commit --hook-type commit-msg
+hooks=$(git rev-parse --git-path hooks)
+for h in pre-commit commit-msg; do
+  sed -i 's#"$PREK" hook-impl#pixi run -e lint prek hook-impl#' "$hooks/$h"
+done
+'''
+
+[environments]
+default = { solve-group = "default" }
+lint = { features = ["lint"], solve-group = "lint" }

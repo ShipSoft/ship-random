@@ -1,0 +1,2 @@
+[codespell]
+skip = build,.pixi,pixi.lock,LICENSES,doxygen/html

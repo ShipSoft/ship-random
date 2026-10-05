@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: SHiP Random
+version: 0.1.0
+url: https://github.com/ShipSoft/ship-random
+repository-code: https://github.com/ShipSoft/ship-random
+type: software
+license: LGPL-3.0-or-later
+authors:
+  - name: The SHiP Collaboration
+abstract: Header-only random number helpers shared by the SHiP simulation, digitisation and reconstruction software, built on Random123.
+keywords:
+  - physics
+  - particle-physics
+  - random-numbers
+  - SHiP
+  - Random123

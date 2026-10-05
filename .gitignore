@@ -1,0 +1,5 @@
+build/
+install/
+.cache/
+.pixi/
+compile_commands.json

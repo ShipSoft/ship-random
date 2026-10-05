@@ -1,0 +1,27 @@
+# committed configuration for conventional commits
+# https://github.com/crate-ci/committed
+
+subject_length = 50
+subject_capitalized = true
+subject_not_punctuated = true
+imperative_subject = true
+no_fixup = true
+no_wip = true
+hard_line_length = 0
+line_length = 72
+style = "conventional"
+allowed_types = [
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "fix",
+    "perf",
+    "refactor",
+    "revert",
+    "style",
+    "test",
+]
+allowed_scopes = []
+merge_commit = true
