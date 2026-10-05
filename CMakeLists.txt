@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(
     SHiPRandom
-    VERSION 0.1.0
+    VERSION 0.2.0
     DESCRIPTION "Random number helpers shared by the SHiP software"
     LANGUAGES CXX
 )

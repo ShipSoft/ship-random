@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: If you use this software, please cite it as below.
 title: SHiP Random
-version: 0.1.0
+version: 0.2.0
 url: https://github.com/ShipSoft/ship-random
 repository-code: https://github.com/ShipSoft/ship-random
 type: software
