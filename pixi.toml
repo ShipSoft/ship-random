@@ -75,7 +75,7 @@ commitizen = "*"
 # Pinned via PyPI: conda-forge's gersemi lags the version the other SHiP
 # repos standardised on, and reflows CMake differently.
 [feature.lint.pypi-dependencies]
-gersemi = "==0.29.1"
+gersemi = "==0.29.2"
 
 [feature.lint.tasks]
 lint = "prek run --all-files"
