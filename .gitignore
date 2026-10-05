@@ -3,3 +3,5 @@ install/
 .cache/
 .pixi/
 compile_commands.json
+doxygen/html/
+doxygen/latex/
