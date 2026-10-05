@@ -50,7 +50,7 @@ class PhiloxRng {
     }
 
     /// Uniform in [lo, hi), with 32 bits of resolution.
-    double uniform(double lo, double hi) { return lo + (hi - lo) * uniform(); }
+    double uniform(double lo, double hi) { return lo + ((hi - lo) * uniform()); }
 
     /// Uniform in [0, 1) with full double resolution: combines two consecutive
     /// 32-bit Philox words into a 64-bit integer and keeps the top 53 bits.
@@ -65,12 +65,12 @@ class PhiloxRng {
         }
         std::uint64_t const hi = buf_[idx_++];
         std::uint64_t const lo = buf_[idx_++];
-        std::uint64_t const bits = (hi << 32) | lo;
-        return static_cast<double>(bits >> 11) * (1.0 / 9007199254740992.0);
+        std::uint64_t const bits = (hi << 32U) | lo;
+        return static_cast<double>(bits >> 11U) * (1.0 / 9007199254740992.0);
     }
 
     /// Uniform in [lo, hi) with full double resolution.
-    double uniform53(double lo, double hi) { return lo + (hi - lo) * uniform53(); }
+    double uniform53(double lo, double hi) { return lo + ((hi - lo) * uniform53()); }
 
     /// Gaussian deviate by the Box–Muller transform, cosine branch only (two
     /// uniforms per deviate). The first draw is flipped from [0, 1) to (0, 1]
@@ -79,7 +79,7 @@ class PhiloxRng {
         double const u1 = 1.0 - uniform();
         double const u2 = uniform();
         return mean +
-               sigma * std::sqrt(-2.0 * std::log(u1)) * std::cos(2.0 * std::numbers::pi * u2);
+               (sigma * std::sqrt(-2.0 * std::log(u1)) * std::cos(2.0 * std::numbers::pi * u2));
     }
 
    private:

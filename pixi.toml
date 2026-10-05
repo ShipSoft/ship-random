@@ -29,6 +29,8 @@ cxx-compiler = "*"
 # supplies. Both come from the same llvm feedstock, so conda keeps them in step.
 clang = ">=19"
 clang-tools = ">=19"
+# run-clang-tidy is a Python script.
+python = ">=3.11"
 
 [tasks]
 # CMAKE_CXX_SCAN_FOR_MODULES is off because nothing here is a module and CMake
