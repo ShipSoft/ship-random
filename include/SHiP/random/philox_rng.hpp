@@ -25,7 +25,7 @@
 #include <cstdint>
 #include <numbers>
 
-namespace ship::random {
+namespace SHiP::random {
 
 class PhiloxRng {
    public:
@@ -90,4 +90,4 @@ class PhiloxRng {
     int idx_ = 4;
 };
 
-}  // namespace ship::random
+}  // namespace SHiP::random
