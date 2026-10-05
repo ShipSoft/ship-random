@@ -9,11 +9,11 @@
 // gaussian goes through std::log and std::cos and may differ in the last bit
 // between maths libraries.
 
+#include <SHiP/random/philox_rng.hpp>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <print>
-#include <ship/random/philox_rng.hpp>
 
 namespace {
 
@@ -36,7 +36,7 @@ int check(char const* name, std::array<double, N> const& expected, Draw draw,
 }  // namespace
 
 int main() {
-    using ship::random::PhiloxRng;
+    using SHiP::random::PhiloxRng;
     int failures = 0;
 
     PhiloxRng a{12345};

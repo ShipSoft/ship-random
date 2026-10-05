@@ -16,7 +16,7 @@ own copy of the same generator class. They now take it from here.
 It is header-only and depends only on
 [Random123](https://github.com/DEShawResearch/random123).
 
-## `ship::random::PhiloxRng`
+## `SHiP::random::PhiloxRng`
 
 A counter-based generator built on Random123's Philox 4x32. It has no shared
 state: a job seeds a fresh instance per event (or per spill, hit, …) from
@@ -24,10 +24,10 @@ the seed, a stream key and a counter offset, so results are reproducible and
 the same whatever the number of threads.
 
 ```cpp
-#include <ship/random/philox_rng.hpp>
+#include <SHiP/random/philox_rng.hpp>
 
 // seed, stream key, sub-stream (e.g. the event number)
-ship::random::PhiloxRng rng{seed, 0xBEEFCAFE, event_number};
+SHiP::random::PhiloxRng rng{seed, 0xBEEFCAFE, event_number};
 double const u = rng.uniform();            // [0, 1), 32-bit resolution
 double const x = rng.uniform(-1.0, 1.0);   // [lo, hi)
 double const t = rng.uniform53(0.0, 5e9);  // [lo, hi), full double resolution
