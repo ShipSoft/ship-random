@@ -100,7 +100,8 @@ class PhiloxRng {
     double gamma_wh(double alpha, double scale = 1, Precision precision = Precision::Bits32) {
         if (alpha < 1.0) {
             throw std::invalid_argument(
-                "Provided alpha for gamma function approximation is less than 1. Consider using an exact gamma function for this instance.");
+                "Provided alpha for gamma function approximation is less than 1. Consider using an "
+                "exact gamma function for this instance.");
         }
         const double a = 1.0 - (1.0 / (9.0 * alpha));
         const double b = 1.0 / (3.0 * std::sqrt(alpha));
@@ -113,12 +114,12 @@ class PhiloxRng {
         return scale * alpha * x * x * x;
     }
 
-    // An approximate beta distribution. Uses approximations of the gamma function for maximum speed.
-    // Not appropriate for very small alpha or zeta.
+    // An approximate beta distribution. Uses approximations of the gamma function for maximum
+    // speed. Not appropriate for very small alpha or zeta.
     double beta_dist_approx(double alpha, double zeta, Precision precision = Precision::Bits32) {
         const double x = gamma_wh(alpha, 1, precision);
         const double y = gamma_wh(zeta, 1, precision);
-        
+
         if (x == 0.0 && y == 0.0) {
             return alpha >= zeta ? 1.0 : 0.0;  // both underflowed
         }
