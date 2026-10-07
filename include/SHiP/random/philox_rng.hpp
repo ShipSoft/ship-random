@@ -50,7 +50,7 @@ class PhiloxRng {
                        std::uint64_t substream = 0)
         : key_{{seed, key_hi}},
           ctr_{{0, static_cast<std::uint32_t>(substream),
-                static_cast<std::uint32_t>(substream >> 32), 0}} {}
+                static_cast<std::uint32_t>(substream >> 32u), 0}} {}
 
     /// Uniform in [0, 1), with 32 bits of resolution.
     double uniform() {
@@ -98,9 +98,9 @@ class PhiloxRng {
     // An approximation of a gamma function - Wilson-Hilferty (1931)
     // This rapidly approaches a Gaussian by alpha ~ 10
     double gamma_wh(double alpha, double scale = 1, Precision precision = Precision::Bits32) {
-        if (alpha <= 0.0) {
+        if (alpha < 1.0) {
             throw std::invalid_argument(
-                "Provided alpha for gamma function approximation must be greater than 0.");
+                "Provided alpha for gamma function approximation is less than 1. Consider using an exact gamma function for this instance.");
         }
         const double a = 1.0 - (1.0 / (9.0 * alpha));
         const double b = 1.0 / (3.0 * std::sqrt(alpha));
@@ -113,11 +113,20 @@ class PhiloxRng {
         return scale * alpha * x * x * x;
     }
 
-    // A beta distribution
-    double beta_dist(double alpha, double zeta, Precision precision = Precision::Bits32) {
-        const double X = gamma_wh(alpha, 1, precision);
-        const double Y = gamma_wh(zeta, 1, precision);
-        return X / (X + Y);
+    // An approximate beta distribution. Uses approximations of the gamma function for maximum speed.
+    // Not appropriate for very small alpha or zeta.
+    double beta_dist_approx(double alpha, double zeta, Precision precision = Precision::Bits32) {
+        const double x = gamma_wh(alpha, 1, precision);
+        const double y = gamma_wh(zeta, 1, precision);
+        
+        if (x == 0.0 && y == 0.0) {
+            return alpha >= zeta ? 1.0 : 0.0;  // both underflowed
+        }
+        if (x >= y) {
+            return 1.0 / (1.0 + (y / x));
+        }
+        const double r = x / y;
+        return r / (1.0 + r);
     }
 
    private:
