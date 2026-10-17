@@ -5,7 +5,7 @@
 [workspace]
 name = "ship-random"
 description = "Random number helpers shared by the SHiP software"
-channels = ["https://prefix.dev/ship", "conda-forge"]
+channels = ["https://prefix.dev/ship-experiment/stable", "conda-forge"]
 platforms = ["linux-64"]
 requires-pixi = ">=0.68"
 
