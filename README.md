@@ -47,7 +47,7 @@ version.
 ## Using it
 
 With pixi or conda, add `ship-random` from
-[`prefix.dev/ship`](https://prefix.dev/channels/ship). In CMake:
+[`prefix.dev/ship-experiment/stable`](https://prefix.dev/channels/@ship-experiment/stable). In CMake:
 
 ```cmake
 find_package(SHiPRandom 0.1 REQUIRED)
