@@ -24,7 +24,7 @@ Thank you for your interest in contributing. As part of the SHiP Collaboration, 
    Run all hooks manually at any time with `pixi run lint`.
 4. **Branching**: create a feature branch for your changes.
 5. **Coding standards**:
-   - C++20; formatting enforced by `clang-format` (`.clang-format`).
+   - C++20 for the library headers, C++23 for the tests; formatting enforced by `clang-format` (`.clang-format`).
    - C++ is checked against the [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
      by `clang-tidy`, using the shared `.clang-tidy` synced from
      [ShipSoft/.github](https://github.com/ShipSoft/.github/tree/main/sync). Only
