@@ -28,6 +28,11 @@
 
 namespace SHiP::random {
 
+// Every multiply-add below is written as std::fma. Left as a * b + c, the
+// compiler may or may not fuse it depending on the target and flags (aarch64
+// and x86 with -mfma fuse it, plain x86-64 does not), so the same seed would
+// give different bits on different machines. std::fma rounds once everywhere.
+
 // Resolution of the uniform draws feeding the derived distributions
 // (gaussian, gamma_wh, beta_dist). Bits32 is the historical default and keeps
 // existing digitisation output bit-identical; Bits53 uses uniform53() and
@@ -63,7 +68,7 @@ class PhiloxRng {
     }
 
     /// Uniform in [lo, hi), with 32 bits of resolution.
-    double uniform(double lo, double hi) { return lo + ((hi - lo) * uniform()); }
+    double uniform(double lo, double hi) { return std::fma(hi - lo, uniform(), lo); }
 
     /// Uniform in [0, 1) with full double resolution: combines two consecutive
     /// 32-bit Philox words into a 64-bit integer and keeps the top 53 bits.
@@ -83,7 +88,7 @@ class PhiloxRng {
     }
 
     /// Uniform in [lo, hi) with full double resolution.
-    double uniform53(double lo, double hi) { return lo + ((hi - lo) * uniform53()); }
+    double uniform53(double lo, double hi) { return std::fma(hi - lo, uniform53(), lo); }
 
     /// Gaussian deviate by the Box–Muller transform, cosine branch only (two
     /// uniforms per deviate). The first draw is flipped from [0, 1) to (0, 1]
@@ -91,8 +96,8 @@ class PhiloxRng {
     double gaussian(double mean, double sigma, Precision precision = Precision::Bits32) {
         double const u1 = 1.0 - draw(precision);
         double const u2 = draw(precision);
-        return mean +
-               (sigma * std::sqrt(-2.0 * std::log(u1)) * std::cos(2.0 * std::numbers::pi * u2));
+        return std::fma(sigma * std::sqrt(-2.0 * std::log(u1)),
+                        std::cos(2.0 * std::numbers::pi * u2), mean);
     }
 
     // An approximation of a gamma function - Wilson-Hilferty (1931)
@@ -108,7 +113,7 @@ class PhiloxRng {
 
         double x = 0.0;
         while (x <= 0.0) {
-            x = a + (b * gaussian(0.0, 1.0, precision));
+            x = std::fma(b, gaussian(0.0, 1.0, precision), a);
         }
 
         return scale * alpha * x * x * x;
