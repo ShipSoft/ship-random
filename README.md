@@ -39,10 +39,11 @@ each detector) so that their sequences are uncorrelated even with the same
 seed.
 
 The numbers drawn are part of the physics output of every package that uses
-this class. `tests/philox_rng_test.cpp` pins the sequences: they match, bit
-for bit, the copies the packages used before. A change that alters them
-changes simulated, digitised and reconstructed events, and needs a new minor
-version.
+this class. `tests/philox_rng_test.cpp` pins the first draws: they match, bit
+for bit, the copies the packages used before. `tests/stream_pin_test.cpp` pins
+every draw method over long runs, for 84 seed, key and sub-stream combinations.
+A change that alters them changes simulated, digitised and reconstructed
+events, and needs a new minor version.
 
 ## Using it
 

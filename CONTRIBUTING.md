@@ -41,11 +41,12 @@ Thank you for your interest in contributing. As part of the SHiP Collaboration, 
    - Every new file must carry an SPDX header (REUSE-compliant; verified by `reuse lint`).
 6. **Commits**: we follow [Conventional Commits](https://www.conventionalcommits.org/), validated by [`committed`](https://github.com/crate-ci/committed). Allowed types are listed in `committed.toml` (`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`).
 7. **Testing**: add tests for new behaviour. Run them with `pixi run test`.
-   `tests/philox_rng_test.cpp` pins the numbers `PhiloxRng` draws. Every
-   package that uses it puts those numbers into its physics output, so a change
-   that makes this test fail changes simulated, digitised and reconstructed
-   events. Such a change needs a new minor version and has to say so in the
-   commit message.
+   `tests/philox_rng_test.cpp` and `tests/stream_pin_test.cpp` pin the numbers
+   `PhiloxRng` draws. Every package that uses it puts those numbers into its
+   physics output, so a change that makes these tests fail changes simulated,
+   digitised and reconstructed events. Such a change needs a new minor version
+   and has to say so in the commit message. For a deliberate change, regenerate
+   the stream tables with `./build/stream_pin_test --print` and paste them in.
 8. **Submission**: open a pull request against `main`. CI (`Pixi Build` and `Lint`) must pass.
 
 ## Licensing
