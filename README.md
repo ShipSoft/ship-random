@@ -43,7 +43,11 @@ this class. `tests/philox_rng_test.cpp` pins the first draws: they match, bit
 for bit, the copies the packages used before. `tests/stream_pin_test.cpp` pins
 every draw method over long runs, for 84 seed, key and sub-stream combinations.
 A change that alters them changes simulated, digitised and reconstructed
-events, and needs a new minor version.
+events, and needs a new minor version. The uniform draws are bit-identical across
+platforms and compiler flags: every multiply-add in the header is a `std::fma`,
+so aarch64, x86-64 and `-march=native` builds round the same way. `gaussian`
+and the distributions built on it also go through `std::log` and `std::cos`,
+which can differ in the last bit between maths libraries.
 
 ## Using it
 
