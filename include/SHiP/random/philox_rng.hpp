@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <numbers>
 #include <stdexcept>
 
@@ -59,13 +60,33 @@ class PhiloxRng {
           ctr_{{0, static_cast<std::uint32_t>(substream),
                 static_cast<std::uint32_t>(substream >> 32u), 0}} {}
 
-    /// Uniform in [0, 1), with 32 bits of resolution.
-    [[nodiscard]] double uniform() {
+    /// @name UniformRandomBitGenerator interface
+    /// Lets PhiloxRng drive the standard library: std::shuffle,
+    /// std::uniform_int_distribution and the like. Each call returns the next
+    /// raw 32-bit Philox word from the same buffer the draw methods use, so it
+    /// consumes exactly what one uniform() would. The algorithms of the
+    /// standard distributions are left to the implementation, so their
+    /// results can differ between standard libraries even though the words
+    /// fed to them do not.
+    /// @{
+    using result_type = std::uint32_t;
+    static constexpr result_type min() { return std::numeric_limits<result_type>::min(); }
+    static constexpr result_type max() { return std::numeric_limits<result_type>::max(); }
+    [[nodiscard]] result_type operator()() {
         if (idx_ >= buf_.size()) {
             refill();
         }
-        return buf_[idx_++] * 0x1p-32;
+        return buf_[idx_++];
     }
+    /// @}
+
+    /// Uniform in [0, 1), with 32 bits of resolution.
+    ///
+    /// 0x1p-32 is the hexadecimal floating-point literal for 2^-32. Both
+    /// steps are exact: a double's 53-bit significand holds any 32-bit word,
+    /// and scaling by a power of two only shifts the exponent. The result is
+    /// exactly word / 2^32, with no rounding.
+    [[nodiscard]] double uniform() { return static_cast<double>((*this)()) * 0x1p-32; }
 
     /// Uniform in [lo, hi), with 32 bits of resolution.
     [[nodiscard]] double uniform(double lo, double hi) { return std::fma(hi - lo, uniform(), lo); }
@@ -74,7 +95,9 @@ class PhiloxRng {
     /// 32-bit Philox words into a 64-bit integer and keeps the top 53 bits.
     /// Use it when the sampled range spans many orders of magnitude (e.g.
     /// ps-scale jitter within a multi-second spill), where uniform() is too
-    /// coarse. If only one word is left in the buffer, it is skipped.
+    /// coarse. If only one word is left in the buffer, it is skipped. The
+    /// skip depends only on the buffer position, never on the word's value,
+    /// so the words that are used stay independent and uniform.
     [[nodiscard]] double uniform53() {
         if (idx_ + 2 > buf_.size()) {
             refill();

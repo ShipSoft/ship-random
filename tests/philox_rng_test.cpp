@@ -7,17 +7,22 @@
 // existed, so a pass means the shared class draws exactly the same numbers
 // they did. uniform, uniform(lo, hi) and uniform53 must match bit for bit;
 // gaussian goes through std::log and std::cos and may differ in the last bit
-// between maths libraries.
+// between maths libraries. The UniformRandomBitGenerator interface, operator(),
+// is pinned to the raw 32-bit words, which are the uniform() values times 2^32.
 
 #include <SHiP/random/philox_rng.hpp>
 #include <array>
 #include <cmath>
 #include <concepts>
+#include <cstdint>
 #include <print>
+#include <random>
 #include <ranges>
 #include <span>
 
 namespace {
+
+static_assert(std::uniform_random_bit_generator<SHiP::random::PhiloxRng>);
 
 int check(char const* name, std::span<double const> expected, std::invocable auto draw,
           double rel_tol = 0.0) {
@@ -26,6 +31,19 @@ int check(char const* name, std::span<double const> expected, std::invocable aut
         double const got = draw();
         if (std::abs(got - want) > rel_tol * std::abs(want)) {
             std::println("{}[{}]: got {:a}, expected {:a}", name, i, got, want);
+            ++failures;
+        }
+    }
+    return failures;
+}
+
+int check_words(char const* name, std::span<std::uint32_t const> expected,
+                std::invocable auto draw) {
+    int failures = 0;
+    for (auto const [i, want] : std::views::enumerate(expected)) {
+        std::uint32_t const got = draw();
+        if (got != want) {
+            std::println("{}[{}]: got {:#010x}, expected {:#010x}", name, i, got, want);
             ++failures;
         }
     }
@@ -64,6 +82,23 @@ int main() {
     failures += check("mixed uniform", std::array{mixed[0]}, [&] { return d.uniform(); });
     failures += check("mixed uniform53(lo, hi)", std::array{mixed[1], mixed[2], mixed[3]},
                       [&] { return d.uniform53(1.0, 2.0); });
+
+    // operator() hands out the raw Philox words; uniform() above scales these
+    // same words by 2^-32. Nine words cross two buffer refills.
+    PhiloxRng words{12345};
+    failures += check_words(
+        "operator()",
+        std::array<std::uint32_t, 9>{0xd8338400, 0x6c3cbf80, 0x2a9c4362, 0xf10d31b6, 0x3b1083f7,
+                                     0x135d4100, 0xefab03d4, 0x870cc4fa, 0x804f54b8},
+        [&] { return words(); });
+
+    // operator() shares the buffer with uniform53(): after one word, the next
+    // uniform53() skips the lone word just as it does after a uniform().
+    PhiloxRng f{7, 0xBEEFCAFE, 3};
+    static_cast<void>(f());
+    failures +=
+        check("mixed operator() uniform53(lo, hi)", std::array{mixed[1], mixed[2], mixed[3]},
+              [&] { return f.uniform53(1.0, 2.0); });
 
     PhiloxRng e{99, 0x12345678, 0};
     failures += check(

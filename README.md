@@ -49,6 +49,21 @@ so aarch64, x86-64 and `-march=native` builds round the same way. `gaussian`
 and the distributions built on it also go through `std::log` and `std::cos`,
 which can differ in the last bit between maths libraries.
 
+`PhiloxRng` also meets the standard `UniformRandomBitGenerator` requirements,
+so it can drive `std::shuffle`, `std::sample` or the `<random>` distributions:
+
+```cpp
+std::ranges::shuffle(hits, rng);
+std::poisson_distribution<int> n_photons{mean};
+int const n = n_photons(rng);
+```
+
+Each call to `rng()` returns the next raw 32-bit Philox word, the same word
+`uniform()` would have used. The words are reproducible, but the standard
+library chooses the algorithm that turns them into a shuffle or a Poisson
+deviate, so the results can differ between libstdc++ and libc++. Use the
+member draw methods where the output has to match across platforms.
+
 ## Using it
 
 With pixi or conda, add `ship-random` from
