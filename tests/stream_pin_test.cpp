@@ -28,9 +28,11 @@
 #include <array>
 #include <bit>
 #include <cmath>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <print>
+#include <ranges>
 #include <stdexcept>
 #include <string_view>
 
@@ -41,7 +43,7 @@ using SHiP::random::Precision;
 
 constexpr std::uint64_t kFnvOffset = 14695981039346656037ULL;
 constexpr std::uint64_t kFnvPrime = 1099511628211ULL;
-constexpr int kDrawsPerStream = 10000;
+constexpr std::size_t kDrawsPerStream = 10000;
 constexpr int kDistributionRun = 2000;
 constexpr double kDistributionTol = 1e-12;
 
@@ -72,9 +74,9 @@ constexpr std::array<bool, 13> kIs53{false, true,  true,  false, false, true, fa
 std::uint64_t hash_stream(std::uint32_t seed, std::uint32_t key, std::uint64_t substream) {
     PhiloxRng rng{seed, key, substream};
     std::uint64_t hash = kFnvOffset;
-    for (int i = 0; i < kDrawsPerStream; ++i) {
-        bool const ranged = ((i / static_cast<int>(kIs53.size())) % 2) == 1;
-        if (kIs53.at(static_cast<std::size_t>(i) % kIs53.size())) {
+    for (auto i = 0uz; i < kDrawsPerStream; ++i) {
+        bool const ranged = ((i / kIs53.size()) % 2) == 1;
+        if (kIs53.at(i % kIs53.size())) {
             hash = mix(hash, ranged ? rng.uniform53(1e-3, 2e3) : rng.uniform53());
         } else {
             hash = mix(hash, ranged ? rng.uniform(-3.0, 7.5) : rng.uniform());
@@ -179,8 +181,7 @@ struct Distribution {
     double run_sum;
 };
 
-template <typename Draw>
-Distribution measure(std::string_view name, Draw draw) {
+Distribution measure(std::string_view name, std::invocable auto draw) {
     Distribution result{.name = name, .first = {}, .run_sum = 0.0};
     for (double& value : result.first) {
         value = draw();
@@ -271,13 +272,12 @@ int main(int argc, char** argv) {  // NOLINT(misc-const-correctness)
     }
 
     auto const measured = measure_all();
-    for (std::size_t d = 0; d < measured.size(); ++d) {
-        auto const& got = measured.at(d);
-        auto const& want = kDistributions.at(d);
-        for (std::size_t i = 0; i < got.first.size(); ++i) {
-            if (!close(got.first.at(i), want.first.at(i))) {
-                std::println("{}[{}]: got {:a}, expected {:a}", want.name, i, got.first.at(i),
-                             want.first.at(i));
+    for (auto const& [got, want] : std::views::zip(measured, kDistributions)) {
+        for (auto const [i, got_first, want_first] :
+             std::views::zip(std::views::iota(0uz), got.first, want.first)) {
+            if (!close(got_first, want_first)) {
+                std::println("{}[{}]: got {:a}, expected {:a}", want.name, i, got_first,
+                             want_first);
                 ++failures;
             }
         }
