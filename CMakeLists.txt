@@ -23,7 +23,7 @@ find_path(Random123_INCLUDE_DIR Random123/philox.h REQUIRED)
 add_library(SHiPRandom INTERFACE)
 add_library(SHiP::Random ALIAS SHiPRandom)
 set_target_properties(SHiPRandom PROPERTIES EXPORT_NAME Random)
-target_compile_features(SHiPRandom INTERFACE cxx_std_20)
+target_compile_features(SHiPRandom INTERFACE cxx_std_23)
 target_include_directories(
     SHiPRandom
     INTERFACE
@@ -67,11 +67,9 @@ if(SHIPRANDOM_BUILD_TESTS)
     enable_testing()
     add_executable(philox_rng_test tests/philox_rng_test.cpp)
     target_link_libraries(philox_rng_test PRIVATE SHiP::Random)
-    target_compile_features(philox_rng_test PRIVATE cxx_std_23)
     add_test(NAME philox_rng COMMAND philox_rng_test)
 
     add_executable(stream_pin_test tests/stream_pin_test.cpp)
     target_link_libraries(stream_pin_test PRIVATE SHiP::Random)
-    target_compile_features(stream_pin_test PRIVATE cxx_std_23)
     add_test(NAME stream_pins COMMAND stream_pin_test)
 endif()
