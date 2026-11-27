@@ -13,8 +13,10 @@ Random number helpers shared by the SHiP software: the simulation
 ([Trout](https://github.com/ShipSoft/Trout)). Each of these used to carry its
 own copy of the same generator class. They now take it from here.
 
-It is header-only and depends only on
-[Random123](https://github.com/DEShawResearch/random123).
+It is a small compiled library built on
+[Random123](https://github.com/DEShawResearch/random123). Random123 is needed
+only to build it: the installed headers do not include it, so packages that use
+ship-random do not need it.
 
 ## `SHiP::random::PhiloxRng`
 
@@ -48,6 +50,18 @@ platforms and compiler flags: every multiply-add in the header is a `std::fma`,
 so aarch64, x86-64 and `-march=native` builds round the same way. `gaussian`
 and the distributions built on it also go through `std::log` and `std::cos`,
 which can differ in the last bit between maths libraries.
+
+### `SHiP::random::philox_block`
+
+The Philox 4x32-10 block function that `PhiloxRng` draws from, for code
+that needs the raw words for a counter and key it lays out itself. It gives
+the same output as `r123::Philox4x32{}(ctr, key)`, so callers of Random123
+can switch to it without changing their numbers.
+
+```cpp
+std::array<std::uint32_t, 4> const words =
+    SHiP::random::philox_block({lo, hi, 0, 0}, {seed, stream});
+```
 
 ## Using it
 

@@ -10,6 +10,7 @@ platforms = ["linux-64", "linux-aarch64"]
 requires-pixi = ">=0.68"
 
 [dependencies]
+# Only needed to build the library; consumers do not see it.
 random123 = "*"
 
 # Build toolchain.
@@ -42,6 +43,7 @@ cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
     -DCMAKE_INSTALL_LIBDIR=lib \
+    -DBUILD_SHARED_LIBS=ON \
     -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
     -DCMAKE_CXX_SCAN_FOR_MODULES=OFF
 """ }

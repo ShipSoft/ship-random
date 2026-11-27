@@ -31,8 +31,8 @@ Thank you for your interest in contributing. As part of the SHiP Collaboration, 
      findings on lines your patch changes are reported, so you are never asked to
      clean up code you did not touch. Whether those findings fail the build or are
      reported for information is set by `fail-on-new` in
-     `.github/workflows/clang-tidy.yml`. The library is header-only, and CI
-     reaches the headers through the tests that include them. To run the same
+     `.github/workflows/clang-tidy.yml`. CI reaches the library source directly
+     and the header through the tests and the source that include it. To run the same
      analysis locally over the whole tree:
      ```bash
      pixi run clang-tidy
