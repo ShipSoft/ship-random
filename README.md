@@ -13,8 +13,10 @@ Random number helpers shared by the SHiP software: the simulation
 ([Trout](https://github.com/ShipSoft/Trout)). Each of these used to carry its
 own copy of the same generator class. They now take it from here.
 
-It is header-only and depends only on
-[Random123](https://github.com/DEShawResearch/random123).
+It is a small compiled library built on
+[Random123](https://github.com/DEShawResearch/random123). Random123 is needed
+only to build it: the installed headers do not include it, so packages that use
+ship-random do not need it.
 
 ## `SHiP::random::PhiloxRng`
 

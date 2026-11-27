@@ -17,16 +17,26 @@
 /// The draws are part of the physics output of every package that uses this
 /// class: changing how a value is computed changes simulated, digitised and
 /// reconstructed events. tests/philox_rng_test.cpp pins the sequences.
+///
+/// Random123 is only used in src/philox_rng.cpp, so code that includes this
+/// header does not need it.
 
 #pragma once
 
-#include <Random123/philox.h>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <numbers>
 #include <stdexcept>
 
 namespace SHiP::random {
+
+namespace detail {
+/// One block of Random123's Philox 4x32 with its default 10 rounds: maps a
+/// 128-bit counter and a 64-bit key to 128 random bits.
+std::array<std::uint32_t, 4> philox_block(std::array<std::uint32_t, 4> const& ctr,
+                                          std::array<std::uint32_t, 2> const& key);
+}  // namespace detail
 
 // Every multiply-add below is written as std::fma. Left as a * b + c, the
 // compiler may or may not fuse it depending on the target and flags (aarch64
@@ -60,10 +70,12 @@ class PhiloxRng {
     /// Uniform in [0, 1), with 32 bits of resolution.
     double uniform() {
         if (idx_ >= 4) {
-            buf_ = rng_(ctr_, key_);
+            buf_ = detail::philox_block(ctr_, key_);
             ctr_[0]++;
             idx_ = 0;
         }
+        // The refill above keeps idx_ below 4.
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         return buf_[idx_++] * (1.0 / 4294967296.0);
     }
 
@@ -77,12 +89,15 @@ class PhiloxRng {
     /// coarse. If only one word is left in the buffer, it is skipped.
     double uniform53() {
         if (idx_ > 2) {
-            buf_ = rng_(ctr_, key_);
+            buf_ = detail::philox_block(ctr_, key_);
             ctr_[0]++;
             idx_ = 0;
         }
+        // The refill above keeps idx_ below 3, so both reads are in bounds.
+        // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
         std::uint64_t const hi = buf_[idx_++];
         std::uint64_t const lo = buf_[idx_++];
+        // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)
         std::uint64_t const bits = (hi << 32U) | lo;
         return static_cast<double>(bits >> 11U) * (1.0 / 9007199254740992.0);
     }
@@ -140,10 +155,9 @@ class PhiloxRng {
         return precision == Precision::Bits53 ? uniform53() : uniform();
     }
 
-    r123::Philox4x32 rng_;
-    r123::Philox4x32::key_type key_;
-    r123::Philox4x32::ctr_type ctr_;
-    r123::Philox4x32::ctr_type buf_{};
+    std::array<std::uint32_t, 2> key_;
+    std::array<std::uint32_t, 4> ctr_;
+    std::array<std::uint32_t, 4> buf_{};
     int idx_ = 4;
 };
 

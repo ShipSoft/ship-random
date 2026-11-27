@@ -17,26 +17,29 @@ include(CMakePackageConfigHelpers)
 
 option(SHIPRANDOM_BUILD_TESTS "Build the tests" ${PROJECT_IS_TOP_LEVEL})
 
-# Random123 is header-only and ships no CMake config.
+# Random123 is header-only and ships no CMake config. Only the library's own
+# source includes it, so consumers do not need it.
 find_path(Random123_INCLUDE_DIR Random123/philox.h REQUIRED)
 
-add_library(SHiPRandom INTERFACE)
+add_library(SHiPRandom src/philox_rng.cpp)
 add_library(SHiP::Random ALIAS SHiPRandom)
-set_target_properties(SHiPRandom PROPERTIES EXPORT_NAME Random)
-target_compile_features(SHiPRandom INTERFACE cxx_std_20)
+# 0.x: a minor release may change the sequences or the interface, so it gets
+# its own soname.
+set_target_properties(
+    SHiPRandom
+    PROPERTIES
+        EXPORT_NAME Random
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+)
+target_compile_features(SHiPRandom PUBLIC cxx_std_20)
 target_include_directories(
     SHiPRandom
-    INTERFACE
+    PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-# The installed config finds Random123 again on the consumer's side, so the
-# build machine's path is not baked into the exported target.
-target_include_directories(
-    SHiPRandom
-    SYSTEM
-    INTERFACE $<BUILD_INTERFACE:${Random123_INCLUDE_DIR}>
-)
+target_include_directories(SHiPRandom SYSTEM PRIVATE ${Random123_INCLUDE_DIR})
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(TARGETS SHiPRandom EXPORT SHiPRandomTargets)
@@ -54,7 +57,6 @@ configure_package_config_file(
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/SHiPRandomConfigVersion.cmake
     COMPATIBILITY SameMinorVersion
-    ARCH_INDEPENDENT
 )
 install(
     FILES
