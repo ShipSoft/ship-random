@@ -51,6 +51,18 @@ so aarch64, x86-64 and `-march=native` builds round the same way. `gaussian`
 and the distributions built on it also go through `std::log` and `std::cos`,
 which can differ in the last bit between maths libraries.
 
+### `SHiP::random::philox_block`
+
+The Philox 4x32-10 block function that `PhiloxRng` draws from, for code
+that needs the raw words for a counter and key it lays out itself. It gives
+the same output as `r123::Philox4x32{}(ctr, key)`, so callers of Random123
+can switch to it without changing their numbers.
+
+```cpp
+std::array<std::uint32_t, 4> const words =
+    SHiP::random::philox_block({lo, hi, 0, 0}, {seed, stream});
+```
+
 ## Using it
 
 With pixi or conda, add `ship-random` from

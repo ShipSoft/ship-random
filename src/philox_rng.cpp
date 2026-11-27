@@ -7,7 +7,7 @@
 #include <array>
 #include <cstdint>
 
-namespace SHiP::random::detail {
+namespace SHiP::random {
 
 // The drawn sequences depend on the round count, so a Random123 that changed
 // its default would change every simulated, digitised and reconstructed event.
@@ -21,4 +21,4 @@ std::array<std::uint32_t, 4> philox_block(std::array<std::uint32_t, 4> const& ct
     return {out[0], out[1], out[2], out[3]};
 }
 
-}  // namespace SHiP::random::detail
+}  // namespace SHiP::random

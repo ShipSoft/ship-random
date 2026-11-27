@@ -13,6 +13,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <print>
 
 namespace {
@@ -33,11 +34,38 @@ int check(char const* name, std::array<double, N> const& expected, Draw draw,
     return failures;
 }
 
+using Words = std::array<std::uint32_t, 4>;
+
+int check_block(char const* name, Words const& ctr, std::array<std::uint32_t, 2> const& key,
+                Words const& expected) {
+    Words const got = SHiP::random::philox_block(ctr, key);
+    if (got == expected) {
+        return 0;
+    }
+    std::println("philox_block {}: got {::08x}, expected {::08x}", name, got, expected);
+    return 1;
+}
+
 }  // namespace
 
 int main() {
     using SHiP::random::PhiloxRng;
     int failures = 0;
+
+    // Random123's known-answer vectors for Philox4x32-10 (kat_vectors).
+    failures += check_block("zeros", {0, 0, 0, 0}, {0, 0},
+                            {0x6627e8d5, 0xe169c58d, 0xbc57ac4c, 0x9b00dbd8});
+    failures +=
+        check_block("ones", {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff},
+                    {0xffffffff, 0xffffffff}, {0x408f276d, 0x41c83b0e, 0xa20bc7c6, 0x6d5451fd});
+    failures +=
+        check_block("pi", {0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344},
+                    {0xa4093822, 0x299f31d0}, {0xd16cfe09, 0x94fdcceb, 0x5001e420, 0x24126ea1});
+    // The shape of aegir's Geant4 seeding: a 64-bit hash in counter words 0
+    // and 1, the config seed and a stream constant as the key. Taken from
+    // r123::Philox4x32 directly.
+    failures += check_block("aegir", {0x89abcdef, 0x01234567, 0, 0}, {20260703, 0x47345EED},
+                            {0x586665dd, 0x431bbdc0, 0xf5d96c5b, 0x6e7b45b2});
 
     PhiloxRng a{12345};
     failures +=

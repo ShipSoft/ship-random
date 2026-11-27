@@ -31,12 +31,16 @@
 
 namespace SHiP::random {
 
-namespace detail {
-/// One block of Random123's Philox 4x32 with its default 10 rounds: maps a
-/// 128-bit counter and a 64-bit key to 128 random bits.
+/// One block of Philox 4x32-10 (Random123's Philox4x32 with its default 10
+/// rounds): maps a 128-bit counter and a 64-bit key to 128 random bits. Gives
+/// the same words as r123::Philox4x32{}(ctr, key), so code that called
+/// Random123 directly can switch to this without changing its output.
+/// PhiloxRng draws from the same function.
+///
+/// It is not called philox4x32 because Random123 defines a function-like
+/// macro of that name, which would break any file that includes both.
 std::array<std::uint32_t, 4> philox_block(std::array<std::uint32_t, 4> const& ctr,
                                           std::array<std::uint32_t, 2> const& key);
-}  // namespace detail
 
 // Every multiply-add below is written as std::fma. Left as a * b + c, the
 // compiler may or may not fuse it depending on the target and flags (aarch64
@@ -70,7 +74,7 @@ class PhiloxRng {
     /// Uniform in [0, 1), with 32 bits of resolution.
     double uniform() {
         if (idx_ >= 4) {
-            buf_ = detail::philox_block(ctr_, key_);
+            buf_ = philox_block(ctr_, key_);
             ctr_[0]++;
             idx_ = 0;
         }
@@ -89,7 +93,7 @@ class PhiloxRng {
     /// coarse. If only one word is left in the buffer, it is skipped.
     double uniform53() {
         if (idx_ > 2) {
-            buf_ = detail::philox_block(ctr_, key_);
+            buf_ = philox_block(ctr_, key_);
             ctr_[0]++;
             idx_ = 0;
         }
